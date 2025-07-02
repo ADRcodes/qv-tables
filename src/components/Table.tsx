@@ -1,19 +1,41 @@
+import React from "react";
 
-// Table component that takes in the top down dimensions of table, whether it's circle or square, and positioning of the table
-
+type TableStatus = "available" | "unavailable";
 
 interface TableProps {
+  name: string;
+  status: TableStatus;
   dimensions: { width: number; height: number };
-  shape: string;
+  /** square by default */
+  shape?: "square" | "circle";
   position: { top: number; left: number };
+  onClick?: () => void;
 }
 
-const Table: React.FC<TableProps> = ({ dimensions, shape, position }) => {
+const Table: React.FC<TableProps> = ({
+  name,
+  status,
+  dimensions,
+  shape = "square",
+  position,
+  onClick,
+}) => {
   return (
     <div
-      className={`table ${shape} h-[${dimensions.height}px] w-[${dimensions.width}px] absolute top-[${position.top}px] left-[${position.left}px}]`}
+      onClick={onClick}
+      className={`absolute flex items-center justify-center font-bold text-white ${
+        shape === "circle" ? "rounded-full" : "rounded"
+      }`}
+      style={{
+        width: dimensions.width,
+        height: dimensions.height,
+        top: position.top,
+        left: position.left,
+        backgroundColor: status === "available" ? "#4caf50" : "#f44336",
+        cursor: "pointer",
+      }}
     >
-      Table
+      {name}
     </div>
   );
 };
