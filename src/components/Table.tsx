@@ -6,8 +6,8 @@ interface TableProps {
   name: string;
   status: TableStatus;
   dimensions: { width: number; height: number };
-  /** square by default */
-  shape?: "square" | "circle";
+  /** rectangle by default */
+  shape?: "rect" | "circle";
   position: { top: number; left: number };
   onClick?: () => void;
 }
@@ -16,7 +16,7 @@ const Table: React.FC<TableProps> = ({
   name,
   status,
   dimensions,
-  shape = "square",
+  shape = "rect",
   position,
   onClick,
 }) => {

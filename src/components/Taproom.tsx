@@ -9,16 +9,22 @@ interface TableData {
   x: number;
   y: number;
   status: TableStatus;
+  dimensions: { width: number; height: number };
+  shape?: "rect" | "circle";
 }
 
-const initialTables: TableData[] = [
-  { id: 1, name: "Table 1", x: 50, y: 60, status: "available" },
-  { id: 2, name: "Table 2", x: 200, y: 60, status: "unavailable" },
-  { id: 3, name: "Table 3", x: 50, y: 200, status: "available" },
-  { id: 4, name: "Table 4", x: 200, y: 200, status: "available" },
+const tableTypes = [
+  { id: 1, dimensions: { width: 50, height: 80 } },
+  { id: 2, dimensions: { width: 50, height: 50 }, shape: "circle" },
+  { id: 3, dimensions: { width: 100, height: 50 } },
 ];
 
-const TABLE_SIZE = 60;
+const initialTables: TableData[] = [
+  { id: 1, name: "101", x: 320, y: 10, ...tableTypes[0], status: "available" },
+  { id: 2, name: "102", x: 250, y: 10, ...tableTypes[0], status: "unavailable" },
+  { id: 3, name: "103", x: 200, y: 10, ...tableTypes[0], status: "available" },
+  { id: 4, name: "104", x: 200, y: 200, ...tableTypes[0], status: "available" },
+];
 
 const Taproom: React.FC = () => {
   const [tables, setTables] = useState<TableData[]>(initialTables);
@@ -45,11 +51,16 @@ const Taproom: React.FC = () => {
             key={table.id}
             name={table.name}
             status={table.status}
-            dimensions={{ width: TABLE_SIZE, height: TABLE_SIZE }}
+            dimensions={{ width: table.dimensions.width, height: table.dimensions.height }}
             position={{ top: table.y, left: table.x }}
+            shape={table.shape}
             onClick={() => handleTableClick(table.id)}
           />
         ))}
+        <div className="absolute left-0 top-[120px] w-[100px] h-[4px] bg-gray-300"></div>
+        <div className="absolute left-[120px] top-[120px] w-[20px] h-[4px] bg-gray-300"></div>
+        <div className="absolute right-0 top-[120px] w-[170px] h-[4px] bg-gray-300"></div>
+        <div className="absolute left-[120px] bottom-[0px] w-[170px] h-[40px] bg-gray-300"></div>
       </div>
       <div className="mt-4 flex gap-6">
         <span className="flex items-center">
