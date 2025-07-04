@@ -1,14 +1,24 @@
 import React from "react";
 
-type TableStatus = "available" | "unavailable";
+export type TableStatus = "available" | "unavailable";
 
-interface TableProps {
+export interface TableDimensions {
+  width: number;
+  height: number;
+}
+
+export interface TablePosition {
+  top: number;
+  left: number;
+}
+
+export interface TableProps {
   name: string;
   status: TableStatus;
-  dimensions: { width: number; height: number };
+  dimensions: TableDimensions;
   /** rectangle by default */
   shape?: "rect" | "circle" | string;
-  position: { top: number; left: number };
+  position: TablePosition;
   onClick?: () => void;
 }
 

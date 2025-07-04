@@ -1,28 +1,21 @@
 import React, { useState } from "react";
 import Table from "./Table";
+import type { TableDimensions, TableProps, TableStatus } from "./Table";
 
-type TableStatus = "available" | "unavailable";
+interface TableType {
+  dimensions: TableDimensions;
+  shape?: TableProps["shape"];
+}
 
-interface TableData {
+interface TableData extends TableType {
   id: number;
   name: string;
   x: number;
   y: number;
   status: TableStatus;
-  dimensions: { width: number; height: number };
-  shape?: "rect" | "circle" | string ;
 }
 
-interface TableProps {
-  name: string;
-  status: TableStatus;
-  dimensions: { width: number; height: number };
-  position: { top: number; left: number };
-  shape?: "rect" | "circle" | string;
-  onClick?: () => void;
-}
-
-const tableTypes: Pick<TableProps, "dimensions" | "shape">[] = [
+const tableTypes: TableType[] = [
   { dimensions: { width: 50, height: 80 } },
   { dimensions: { width: 50, height: 50 }, shape: "circle" },
   { dimensions: { width: 100, height: 50 } },
