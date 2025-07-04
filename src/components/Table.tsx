@@ -7,7 +7,7 @@ interface TableProps {
   status: TableStatus;
   dimensions: { width: number; height: number };
   /** rectangle by default */
-  shape?: "rect" | "circle";
+  shape?: "rect" | "circle" | string;
   position: { top: number; left: number };
   onClick?: () => void;
 }

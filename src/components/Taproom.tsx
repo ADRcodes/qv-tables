@@ -10,13 +10,22 @@ interface TableData {
   y: number;
   status: TableStatus;
   dimensions: { width: number; height: number };
-  shape?: "rect" | "circle";
+  shape?: "rect" | "circle" | string ;
 }
 
-const tableTypes = [
-  { id: 1, dimensions: { width: 50, height: 80 } },
-  { id: 2, dimensions: { width: 50, height: 50 }, shape: "circle" },
-  { id: 3, dimensions: { width: 100, height: 50 } },
+interface TableProps {
+  name: string;
+  status: TableStatus;
+  dimensions: { width: number; height: number };
+  position: { top: number; left: number };
+  shape?: "rect" | "circle" | string;
+  onClick?: () => void;
+}
+
+const tableTypes: Pick<TableProps, "dimensions" | "shape">[] = [
+  { dimensions: { width: 50, height: 80 } },
+  { dimensions: { width: 50, height: 50 }, shape: "circle" },
+  { dimensions: { width: 100, height: 50 } },
 ];
 
 const initialTables: TableData[] = [
