@@ -1,14 +1,29 @@
 import React from "react";
 
-type TableStatus = "available" | "unavailable";
+export type TableStatus = "available" | "unavailable";
 
-interface TableProps {
+export interface TableDimensions {
+  width: number;
+  height: number;
+}
+
+export interface TablePosition {
+  top: number;
+  left: number;
+}
+
+export interface TableProps {
   name: string;
   status: TableStatus;
-  dimensions: { width: number; height: number };
+  dimensions: TableDimensions;
   /** rectangle by default */
-  shape?: "rect" | "circle";
-  position: { top: number; left: number };
+  shape?: "rect" | "circle" | string;
+  position: TablePosition;
+  /**
+   * Scale factor applied to all dimensions and positions.
+   * Defaults to `1` when not provided.
+   */
+  scale?: number;
   onClick?: () => void;
 }
 
@@ -18,6 +33,7 @@ const Table: React.FC<TableProps> = ({
   dimensions,
   shape = "rect",
   position,
+  scale = 1,
   onClick,
 }) => {
   return (
@@ -27,10 +43,10 @@ const Table: React.FC<TableProps> = ({
         shape === "circle" ? "rounded-full" : "rounded"
       }`}
       style={{
-        width: dimensions.width,
-        height: dimensions.height,
-        top: position.top,
-        left: position.left,
+        width: dimensions.width * scale,
+        height: dimensions.height * scale,
+        top: position.top * scale,
+        left: position.left * scale,
         backgroundColor: status === "available" ? "#4caf50" : "#f44336",
         cursor: "pointer",
       }}
