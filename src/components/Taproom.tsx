@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Table from "./Table";
 import type { TableDimensions, TableProps, TableStatus } from "./Table";
 
+
 const BASE_WIDTH = 400;
 const BASE_HEIGHT = 300;
 
@@ -11,7 +12,7 @@ interface TableType {
   shape?: TableProps["shape"];
 }
 
-interface TableData {
+interface TableData extends TableType {
   id: number;
   name: string;
   x: number;
@@ -24,6 +25,7 @@ const tableTypes: TableType[] = [
   { id: 1, dimensions: { width: 50, height: 80 } },
   { id: 2, dimensions: { width: 50, height: 50 }, shape: "circle" },
   { id: 3, dimensions: { width: 100, height: 50 } },
+
 ];
 
 const initialTables: TableData[] = [
