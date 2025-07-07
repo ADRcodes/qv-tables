@@ -1,58 +1,45 @@
+// src/components/Table.tsx
 import React from "react";
 
 export type TableStatus = "available" | "unavailable";
 
-export interface TableDimensions {
-  width: number;
-  height: number;
-}
-
-export interface TablePosition {
-  top: number;
-  left: number;
-}
-
 export interface TableProps {
-  name: string;
-  status: TableStatus;
-  dimensions: TableDimensions;
-  /** rectangle by default */
-  shape?: "rect" | "circle" | string;
-  position: TablePosition;
-  /**
-   * Scale factor applied to all dimensions and positions.
-   * Defaults to `1` when not provided.
-   */
-  scale?: number;
-  onClick?: () => void;
+  id: number;
+  status?: TableStatus;
+  dimensions: { width: number; height: number };
+  shape?: "rect" | "circle";
+  position: { x: number; y: number };
+  onClick: (id: number) => void;
 }
 
 const Table: React.FC<TableProps> = ({
-  name,
-  status,
+  id,
+  // default table status is available
+  status = "available",
   dimensions,
   shape = "rect",
   position,
-  scale = 1,
   onClick,
 }) => {
+  const fill = status === "available" ? "#4caf50" : "#f44336";
+  const cx = position.x + dimensions.width / 2;
+  const cy = position.y + dimensions.height / 2;
+
   return (
-    <div
-      onClick={onClick}
-      className={`absolute flex items-center justify-center font-bold text-white ${
-        shape === "circle" ? "rounded-full" : "rounded"
-      }`}
-      style={{
-        width: dimensions.width * scale,
-        height: dimensions.height * scale,
-        top: position.top * scale,
-        left: position.left * scale,
-        backgroundColor: status === "available" ? "#4caf50" : "#f44336",
-        cursor: "pointer",
-      }}
-    >
-      {name}
-    </div>
+    <g onClick={() => onClick(id)} style={{ cursor: "pointer" }}>
+      {shape === "circle" ? (
+        <circle cx={cx} cy={cy} r={dimensions.width / 2} fill={fill} />
+      ) : (
+        <rect
+          x={position.x}
+          y={position.y}
+          width={dimensions.width}
+          height={dimensions.height}
+          rx={4}
+          fill={fill}
+        />
+      )}
+    </g>
   );
 };
 
