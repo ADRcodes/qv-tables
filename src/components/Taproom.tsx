@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Table from "./Table";
 import type { TableStatus } from "./Table";
+import TableList from "./TableList";
 import { db } from "../firebase";
 import {
   collection,
@@ -17,6 +18,7 @@ const BASE_WIDTH = 750;
 const BASE_HEIGHT = 400;
 const GRID_SIZE = 10;
 
+
 interface TableType {
   id: number;
   dimensions: { width: number; height: number };
@@ -28,6 +30,8 @@ interface TableData {
   name: string;
   x: number;
   y: number;
+  seats: number;
+  isOutside?: boolean;
   status?: TableStatus;
   typeId: number;
 }
@@ -50,54 +54,54 @@ const tableTypes: TableType[] = [
 ];
 
 const initialTables: TableData[] = [
-  { id: 1, name: "101", x: 680, y: 10, typeId: 2 },
-  { id: 2, name: "102", x: 610, y: 10, typeId: 2 },
-  { id: 3, name: "103", x: 540, y: 10, typeId: 2 },
-  { id: 4, name: "104", x: 470, y: 10, typeId: 2 },
-  { id: 5, name: "105", x: 400, y: 10, typeId: 2 },
-  { id: 6, name: "106", x: 320, y: 10, typeId: 2 },
+  { id: 1, name: "101", x: 680, y: 10, typeId: 2, seats: 4, isOutside: true },
+  { id: 2, name: "102", x: 610, y: 10, typeId: 2, seats: 4, isOutside: true },
+  { id: 3, name: "103", x: 540, y: 10, typeId: 2, seats: 4, isOutside: true },
+  { id: 4, name: "104", x: 470, y: 10, typeId: 2, seats: 4, isOutside: true },
+  { id: 5, name: "105", x: 400, y: 10, typeId: 2, seats: 4, isOutside: true },
+  { id: 6, name: "106", x: 320, y: 10, typeId: 2, seats: 4, isOutside: true },
   // Circle tables
-  { id: 7, name: "108", x: 220, y: 10, typeId: 3 },
-  { id: 8, name: "109", x: 150, y: 10, typeId: 3 },
-  { id: 9, name: "110", x: 80, y: 10, typeId: 3 },
-  { id: 10, name: "111", x: 10, y: 10, typeId: 3 },
-  { id: 11, name: "112", x: 10, y: 70, typeId: 3 },
-  { id: 12, name: "113", x: 80, y: 70, typeId: 3 },
-  { id: 13, name: "114", x: 250, y: 100, typeId: 3 },
+  { id: 7, name: "108", x: 220, y: 10, typeId: 3, seats: 4, isOutside: true },
+  { id: 8, name: "109", x: 150, y: 10, typeId: 3, seats: 4, isOutside: true },
+  { id: 9, name: "110", x: 80, y: 10, typeId: 3, seats: 4, isOutside: true },
+  { id: 10, name: "111", x: 10, y: 10, typeId: 3, seats: 4, isOutside: true },
+  { id: 11, name: "112", x: 10, y: 70, typeId: 3, seats: 4, isOutside: true },
+  { id: 12, name: "113", x: 80, y: 70, typeId: 3, seats: 4, isOutside: true },
+  { id: 13, name: "114", x: 250, y: 100, typeId: 3, seats: 4, isOutside: true },
   
-  { id: 14, name: "201", x: 680, y: 80, typeId: 1 },
-  { id: 15, name: "202", x: 620, y: 80, typeId: 1 },
-  { id: 16, name: "203", x: 560, y: 100, typeId: 1 },
-  { id: 17, name: "204", x: 500, y: 100, typeId: 1 },
+  { id: 14, name: "201", x: 680, y: 80, typeId: 1, seats: 4 },
+  { id: 15, name: "202", x: 620, y: 80, typeId: 1, seats: 4 },
+  { id: 16, name: "203", x: 560, y: 100, typeId: 1, seats: 4 },
+  { id: 17, name: "204", x: 500, y: 100, typeId: 1, seats: 4 },
 
-  { id: 18, name: "205", x: 410, y: 230, typeId: 3 },
-  { id: 19, name: "206", x: 340, y: 230, typeId: 3 },
+  { id: 18, name: "205", x: 410, y: 230, typeId: 3, seats: 4 },
+  { id: 19, name: "206", x: 340, y: 230, typeId: 3, seats: 4 },
 
-  { id: 20, name: "207", x: 500, y: 190, typeId: 1 },
-  { id: 21, name: "208", x: 560, y: 190, typeId: 1 },
-  { id: 22, name: "209", x: 620, y: 190, typeId: 1 },
-  { id: 23, name: "210", x: 680, y: 190, typeId: 1 },
+  { id: 20, name: "207", x: 500, y: 190, typeId: 1, seats: 4 },
+  { id: 21, name: "208", x: 560, y: 190, typeId: 1, seats: 4 },
+  { id: 22, name: "209", x: 620, y: 190, typeId: 1, seats: 4 },
+  { id: 23, name: "210", x: 680, y: 190, typeId: 1, seats: 4 },
 
-  { id: 24, name: "301", x: 650, y: 280, typeId: 2 },
-  { id: 25, name: "302", x: 590, y: 280, typeId: 2 },
-  { id: 26, name: "303", x: 530, y: 280, typeId: 2 },
+  { id: 24, name: "301", x: 650, y: 280, typeId: 2, seats: 4 },
+  { id: 25, name: "302", x: 590, y: 280, typeId: 2, seats: 4 },
+  { id: 26, name: "303", x: 530, y: 280, typeId: 2, seats: 4 },
 
-  { id: 27, name: "401", x: 650, y: 340, typeId: 1 },
-  { id: 28, name: "402", x: 590, y: 340, typeId: 1 },
+  { id: 27, name: "401", x: 650, y: 340, typeId: 1, seats: 4 },
+  { id: 28, name: "402", x: 590, y: 340, typeId: 1, seats: 4 },
 
-  { id: 29, name: "501", x: 430, y: 370, typeId: 5 },
-  { id: 30, name: "502", x: 380, y: 370, typeId: 5 },
-  { id: 31, name: "503", x: 330, y: 370, typeId: 5 },
-  { id: 32, name: "504", x: 280, y: 370, typeId: 5 },
-  { id: 33, name: "505", x: 230, y: 370, typeId: 5 },
+  { id: 29, name: "501", x: 430, y: 370, typeId: 5, seats: 2 },
+  { id: 30, name: "502", x: 380, y: 370, typeId: 5, seats: 2 },
+  { id: 31, name: "503", x: 330, y: 370, typeId: 5, seats: 2 },
+  { id: 32, name: "504", x: 280, y: 370, typeId: 5, seats: 2 },
+  { id: 33, name: "505", x: 230, y: 370, typeId: 5, seats: 2 },
 
-  { id: 34, name: "506", x: 265, y: 190, typeId: 1 },
+  { id: 34, name: "506", x: 265, y: 190, typeId: 1, seats: 4 },
 
-  { id: 35, name: "507",  x: 170, y: 190, typeId: 3 },
-  { id: 36, name: "508",  x: 40, y: 360, typeId: 3 },
-  { id: 37, name: "509",  x: 140, y: 300, typeId: 3 },
+  { id: 35, name: "507",  x: 170, y: 190, typeId: 3, seats: 4 },
+  { id: 36, name: "508",  x: 40, y: 360, typeId: 3, seats: 4 },
+  { id: 37, name: "509",  x: 140, y: 300, typeId: 3, seats: 4 },
 
-  { id: 39, name: "511",  x: 10, y: 300, typeId: 4 }
+  { id: 39, name: "511",  x: 10, y: 300, typeId: 4, seats: 6 }
 
 ];
 
@@ -124,17 +128,26 @@ const Taproom: React.FC = () => {
   useEffect(() => {
     const q = query(collection(db, "tables"));
     const unsubscribe = onSnapshot(q, (snap) => {
-      const docs = snap.docs.map((d) => ({
-        ...(d.data() as TableData),
-        id: Number(d.id),            // doc.id is string
-        status: (d.data() as TableData).status || "available"
-      }));
+      const docs = snap.docs.map((d) => {
+        const data = d.data() as TableData;
+        return {
+          ...data,
+          id: Number(d.id), // doc.id is string
+          status: data.status || "available",
+          seats:
+            data.seats ?? initialTables.find((t) => t.id === Number(d.id))?.seats ?? 4,
+          isOutside:
+            data.isOutside ??
+            initialTables.find((t) => t.id === Number(d.id))?.isOutside ??
+            false,
+        };
+      });
       if (docs.length === 0) {
         // 2️⃣ Seed initial data on first run
         initialTables.forEach((t) =>
           setDoc(doc(db, "tables", String(t.id)), {
             ...t,
-            status: t.status || "available"
+            status: t.status || "available",
           })
         );
       } else {
@@ -297,7 +310,7 @@ const Taproom: React.FC = () => {
               }}
               onPointerDown={(e) => handlePointerDown(e, t)}
             >
-              <span className="font-bold text-white text-sm pointer-events-none select-none">
+              <span className="font-bold text-white text-sm pointer-events-none select-none hidden sm:block">
                 {t.name}
               </span>
             </div>
@@ -315,6 +328,8 @@ const Taproom: React.FC = () => {
           Unavailable
         </span>
       </div>
+
+      <TableList tables={tables} />
     </div>
   );
 };
