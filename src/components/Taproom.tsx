@@ -1,10 +1,20 @@
 // src/components/Taproom.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Table from "./Table";
 import type { TableStatus } from "./Table";
+import { db } from "../firebase";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  setDoc,
+  query
+} from "firebase/firestore";
+
 
 const BASE_WIDTH = 750;
-const BASE_HEIGHT = 500;
+const BASE_HEIGHT = 400;
 
 interface TableType {
   id: number;
@@ -31,11 +41,11 @@ interface Line {
 }
 
 const tableTypes: TableType[] = [
-  { id: 1, dimensions: { width: 50, height: 80 } },
-  { id: 2, dimensions: { width: 50, height: 50 } },
-  { id: 3, dimensions: { width: 50, height: 50 }, shape: "circle" },
-  { id: 4, dimensions: { width: 100, height: 50 } },
-  { id: 5, dimensions: { width: 40, height: 40 }, shape: "circle" },
+  { id: 1, dimensions: { width: 40, height: 60 } },
+  { id: 2, dimensions: { width: 40, height: 40 } },
+  { id: 3, dimensions: { width: 40, height: 40 }, shape: "circle" },
+  { id: 4, dimensions: { width: 100, height: 40 } },
+  { id: 5, dimensions: { width: 30, height: 30 }, shape: "circle" },
 ];
 
 const initialTables: TableData[] = [
@@ -54,8 +64,8 @@ const initialTables: TableData[] = [
   { id: 12, name: "113", x: 80, y: 70, typeId: 3 },
   { id: 13, name: "114", x: 250, y: 100, typeId: 3 },
   
-  { id: 14, name: "201", x: 680, y: 100, typeId: 1 },
-  { id: 15, name: "202", x: 620, y: 100, typeId: 1 },
+  { id: 14, name: "201", x: 680, y: 80, typeId: 1 },
+  { id: 15, name: "202", x: 620, y: 80, typeId: 1 },
   { id: 16, name: "203", x: 560, y: 100, typeId: 1 },
   { id: 17, name: "204", x: 500, y: 100, typeId: 1 },
 
@@ -92,34 +102,134 @@ const initialTables: TableData[] = [
 
 const floorLines: Line[] = [
   // Walls
-  { left: 0,   top: 180, width: 220, height: 4   },
-  { left: 260, top: 180, width: 60,  height: 4   },
-  { left: 460, top: 180, width: 280, height: 4   },
+  { left: 0,   top: 160, width: 220, height: 4   },
+  { left: 260, top: 160, width: 60,  height: 4   },
+  { left: 460, top: 160, width: 280, height: 4   },
   // Stairs
-  { left: 0, top: 128, width: 180, height: 50 },
+  { left: 0, top: 118, width: 180, height: 40 },
   { right: 0, bottom: 0, width: 180, height: 60 },
   // Bar
   { left: 220, bottom: 0, width: 280, height: 80 },
 ];
 
 const Taproom: React.FC = () => {
-  const [tables, setTables] = useState<TableData[]>(initialTables);
+  const [tables, setTables] = useState<TableData[]>([]);
+  const [editMode, setEditMode] = useState(false);
+  // const [dragging, setDragging] = useState<{
+  //   id: number;
+  //   startX: number;
+  //   startY: number;
+  //   startClientX: number;
+  //   startClientY: number;
+  // } | null>(null);
 
-  const handleTableClick = (id: number) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+
+  // 1️⃣ Subscribe to Firestore “tables” collection
+  useEffect(() => {
+    const q = query(collection(db, "tables"));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const docs = snap.docs.map((d) => ({
+        ...(d.data() as TableData),
+        id: Number(d.id),            // doc.id is string
+        status: (d.data() as TableData).status || "available"
+      }));
+      if (docs.length === 0) {
+        // 2️⃣ Seed initial data on first run
+        initialTables.forEach((t) =>
+          setDoc(doc(db, "tables", String(t.id)), {
+            ...t,
+            status: t.status || "available"
+          })
+        );
+      } else {
+        setTables(docs);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // 3️⃣ Toggle status in Firestore
+  const handleTableClick = async (id: number) => {
+    if (editMode) return;
+    const table = tables.find((t) => t.id === id);
+    if (!table) return;
+    const current = table.status || "available";
+    const next: TableStatus = current === "available" ? "unavailable" : "available";
+    await updateDoc(doc(db, "tables", String(id)), { status: next });
+    // UI will auto-update via onSnapshot
+  };
+
+  const handlePointerDown = (
+  e: React.PointerEvent,
+  t: TableData
+): void => {
+  if (!editMode || !containerRef.current) return;
+  e.preventDefault();
+
+  const rect = containerRef.current.getBoundingClientRect();
+  const startX = t.x;
+  const startY = t.y;
+  const startClientX = e.clientX;
+  const startClientY = e.clientY;
+
+  // move handler closes over startX/startY/startClientX/startClientY/rect
+  const onPointerMove = (ev: PointerEvent) => {
+    const dxClient = ev.clientX - startClientX;
+    const dyClient = ev.clientY - startClientY;
+    const dx = (dxClient / rect.width) * BASE_WIDTH;
+    const dy = (dyClient / rect.height) * BASE_HEIGHT;
+
     setTables((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, status: t.status === "available" ? "unavailable" : "available" }
-          : t
+      prev.map((tbl) =>
+        tbl.id === t.id
+          ? { ...tbl, x: startX + dx, y: startY + dy }
+          : tbl
       )
     );
   };
 
-  return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Taproom Floorplan</h2>
+  // up handler now uses ev to compute final position and _then_ persists
+  const onPointerUp = async (ev: PointerEvent) => {
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
 
-      <div className="relative w-full aspect-[750/500] border border-gray-300 rounded overflow-hidden">
+    const dxClient = ev.clientX - startClientX;
+    const dyClient = ev.clientY - startClientY;
+    const dx = (dxClient / rect.width) * BASE_WIDTH;
+    const dy = (dyClient / rect.height) * BASE_HEIGHT;
+    const finalX = startX + dx;
+    const finalY = startY + dy;
+
+    // write the final coords to Firestore
+    await updateDoc(doc(db, "tables", String(t.id)), {
+      x: finalX,
+      y: finalY,
+    });
+  };
+
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup",   onPointerUp);
+};
+
+
+
+  return (
+    <div className="p-2">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Taproom Floorplan</h2>
+        <button
+          onClick={() => setEditMode((v) => !v)}
+          className={`px-3 py-1 rounded ${
+            editMode ? "bg-red-600 text-white" : "bg-blue-600 text-white"
+          }`}
+        >
+          {editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+        </button>
+      </div>
+      <div ref={containerRef} className="relative w-full aspect-[750/400] max-w-[750px] border border-gray-300 rounded overflow-hidden">
         {/* 1) The SVG with just shapes */}
         <svg
           viewBox={`0 0 ${BASE_WIDTH} ${BASE_HEIGHT}`}
@@ -157,24 +267,29 @@ const Taproom: React.FC = () => {
           })}
         </svg>
 
-        {/* 2) HTML labels on top—won't scale */}
+        {/* HTML labels + drag handles */}
         {tables.map((t) => {
           const type = tableTypes.find((x) => x.id === t.typeId)!;
-          // center point in %
-          const cxPct = ((t.x + type.dimensions.width / 2) / BASE_WIDTH) * 100;
-          const cyPct = ((t.y + type.dimensions.height / 2) / BASE_HEIGHT) * 100;
+          const leftPct =
+            ((t.x + type.dimensions.width / 2) / BASE_WIDTH) * 100;
+          const topPct =
+            ((t.y + type.dimensions.height / 2) / BASE_HEIGHT) * 100;
 
           return (
             <div
               key={t.id}
-              className="absolute pointer-events-none"
+              // allow pointer events only in edit mode
               style={{
-                left:  `${cxPct}%`,
-                top:   `${cyPct}%`,
+                position: "absolute",
+                left: `${leftPct}%`,
+                top: `${topPct}%`,
                 transform: "translate(-50%, -50%)",
+                cursor: editMode ? "grab" : "default",
+                pointerEvents: editMode ? "auto" : "none",
               }}
+              onPointerDown={(e) => handlePointerDown(e, t)}
             >
-              <span className="font-bold text-white text-sm">
+              <span className="font-bold text-white text-sm pointer-events-none">
                 {t.name}
               </span>
             </div>
