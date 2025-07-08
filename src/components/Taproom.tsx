@@ -15,6 +15,7 @@ import {
 
 const BASE_WIDTH = 750;
 const BASE_HEIGHT = 400;
+const GRID_SIZE = 10;
 
 interface TableType {
   id: number;
@@ -175,13 +176,21 @@ const Taproom: React.FC = () => {
     const dx = (dxClient / rect.width) * BASE_WIDTH;
     const dy = (dyClient / rect.height) * BASE_HEIGHT;
 
-    setTables((prev) =>
-      prev.map((tbl) =>
-        tbl.id === t.id
-          ? { ...tbl, x: startX + dx, y: startY + dy }
-          : tbl
-      )
-    );
+    // snap while dragging
+      const rawX = startX + dx;
+      const rawY = startY + dy;
+      const snappedX =
+        Math.round(rawX / GRID_SIZE) * GRID_SIZE;
+      const snappedY =
+        Math.round(rawY / GRID_SIZE) * GRID_SIZE;
+
+      setTables((prev) =>
+        prev.map((tbl) =>
+          tbl.id === t.id
+            ? { ...tbl, x: snappedX, y: snappedY }
+            : tbl
+        )
+      );
   };
 
   // up handler now uses ev to compute final position and _then_ persists
@@ -193,8 +202,13 @@ const Taproom: React.FC = () => {
     const dyClient = ev.clientY - startClientY;
     const dx = (dxClient / rect.width) * BASE_WIDTH;
     const dy = (dyClient / rect.height) * BASE_HEIGHT;
-    const finalX = startX + dx;
-    const finalY = startY + dy;
+    const rawX = startX + dx;
+    const rawY = startY + dy;
+    const finalX =
+      Math.round(rawX / GRID_SIZE) * GRID_SIZE;
+    const finalY =
+      Math.round(rawY / GRID_SIZE) * GRID_SIZE;
+
 
     // write the final coords to Firestore
     await updateDoc(doc(db, "tables", String(t.id)), {
@@ -203,7 +217,7 @@ const Taproom: React.FC = () => {
     });
   };
 
-  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointermove", onPointerMove, { passive: false });
   window.addEventListener("pointerup",   onPointerUp);
 };
 
@@ -283,7 +297,7 @@ const Taproom: React.FC = () => {
               }}
               onPointerDown={(e) => handlePointerDown(e, t)}
             >
-              <span className="font-bold text-white text-sm pointer-events-none">
+              <span className="font-bold text-white text-sm pointer-events-none select-none">
                 {t.name}
               </span>
             </div>
