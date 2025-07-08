@@ -115,13 +115,6 @@ const floorLines: Line[] = [
 const Taproom: React.FC = () => {
   const [tables, setTables] = useState<TableData[]>([]);
   const [editMode, setEditMode] = useState(false);
-  // const [dragging, setDragging] = useState<{
-  //   id: number;
-  //   startX: number;
-  //   startY: number;
-  //   startClientX: number;
-  //   startClientY: number;
-  // } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -217,8 +210,8 @@ const Taproom: React.FC = () => {
 
 
   return (
-    <div className="p-2">
-      <div className="flex items-center justify-between mb-4">
+    <div className="p-2 flex flex-col items-center justify-center ">
+      <div className="flex w-full items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Taproom Floorplan</h2>
         <button
           onClick={() => setEditMode((v) => !v)}
@@ -286,6 +279,7 @@ const Taproom: React.FC = () => {
                 transform: "translate(-50%, -50%)",
                 cursor: editMode ? "grab" : "default",
                 pointerEvents: editMode ? "auto" : "none",
+                touchAction: "none",
               }}
               onPointerDown={(e) => handlePointerDown(e, t)}
             >
