@@ -17,15 +17,18 @@ const TableList: React.FC<TableListProps> = ({ tables }) => {
   return (
     <div className="mt-4 w-full max-w-[750px]">
       <h3 className="text-xl font-bold mb-2">Available Tables</h3>
-      <ul className="space-y-1">
-        {available.map((t) => (
-          <li key={t.id} className="flex justify-between">
-            <span>Table {t.name}</span>
-            <span>{t.seats} seats</span>
-            <span>{t.isOutside ? "Outside" : "Inside"}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-wrap gap-2 space-y-1">
+        {available.length === 0 && (<span>No available tables</span>)}
+        {available.length < 16 &&
+          available.map((t) => (
+            <div key={t.id} className="flex gap-1 border-1 border-green-700/85 rounded-2xl overflow-hidden">
+              <span className="font-bold bg-[#4caf50] text-white p-2">{t.name}</span>
+              <span className="py-2">{t.seats}🪑</span>
+              <span className="pr-2 py-2">{t.isOutside ? "☀️" : ""}</span>
+            </div>
+          ))}
+        {available.length >= 16 && (<span> {available.length} available tables</span>)}
+      </div>
     </div>
   );
 };

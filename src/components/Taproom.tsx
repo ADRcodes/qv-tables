@@ -46,7 +46,7 @@ interface Line {
 }
 
 const tableTypes: TableType[] = [
-  { id: 1, dimensions: { width: 40, height: 60 } },
+  { id: 1, dimensions: { width: 40, height: 65 } },
   { id: 2, dimensions: { width: 40, height: 40 } },
   { id: 3, dimensions: { width: 40, height: 40 }, shape: "circle" },
   { id: 4, dimensions: { width: 100, height: 40 } },
@@ -89,11 +89,11 @@ const initialTables: TableData[] = [
   { id: 27, name: "401", x: 650, y: 340, typeId: 1, seats: 4 },
   { id: 28, name: "402", x: 590, y: 340, typeId: 1, seats: 4 },
 
-  { id: 29, name: "501", x: 430, y: 370, typeId: 5, seats: 2 },
-  { id: 30, name: "502", x: 380, y: 370, typeId: 5, seats: 2 },
-  { id: 31, name: "503", x: 330, y: 370, typeId: 5, seats: 2 },
-  { id: 32, name: "504", x: 280, y: 370, typeId: 5, seats: 2 },
-  { id: 33, name: "505", x: 230, y: 370, typeId: 5, seats: 2 },
+  { id: 29, name: "501", x: 430, y: 370, typeId: 5, seats: 1 },
+  { id: 30, name: "502", x: 380, y: 370, typeId: 5, seats: 1 },
+  { id: 31, name: "503", x: 330, y: 370, typeId: 5, seats: 1 },
+  { id: 32, name: "504", x: 280, y: 370, typeId: 5, seats: 1 },
+  { id: 33, name: "505", x: 230, y: 370, typeId: 5, seats: 1 },
 
   { id: 34, name: "506", x: 265, y: 190, typeId: 1, seats: 4 },
 
@@ -112,15 +112,23 @@ const floorLines: Line[] = [
   { left: 460, top: 160, width: 280, height: 4   },
   // Stairs
   { left: 0, top: 118, width: 180, height: 40 },
-  { right: 0, bottom: 0, width: 180, height: 60 },
+  { right: 0, bottom: 0, width: 180, height: 40 },
   // Bar
-  { left: 220, bottom: 0, width: 280, height: 80 },
+  { left: 220, bottom: 0, width: 280, height: 70 },
 ];
 
 const Taproom: React.FC = () => {
   const [tables, setTables] = useState<TableData[]>([]);
   const [editMode, setEditMode] = useState(false);
-
+  const [editing, setEditing] = useState<TableData | null>(null);
+  const [placing, setPlacing] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState<{
+    name: string;
+    seats: number;
+    x: number;
+    y: number;
+  }>({ name: "New", seats: 4, x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
 
@@ -234,22 +242,91 @@ const Taproom: React.FC = () => {
   window.addEventListener("pointerup",   onPointerUp);
 };
 
+const openEditor = (t: TableData) => {
+    setForm({ name: t.name, seats: t.seats ?? 4, x: t.x, y: t.y });
+    setEditing(t);
+  };
+  const closeEditor = () => setEditing(null);
 
+  const saveEdit = async () => {
+    if (!editing) return;
+    await updateDoc(doc(db, "tables", String(editing.id)), {
+      name:  form.name,
+      seats: form.seats,
+    });
+    closeEditor();
+  };
+
+  // Begin adding: click map to place
+  const openAdd = () => {
+    setPlacing(true);
+    setForm({ name: "New", seats: 4, x: 0, y: 0 });
+  };
+  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!placing || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    const baseX = (clickX / rect.width) * BASE_WIDTH;
+    const baseY = (clickY / rect.height) * BASE_HEIGHT;
+    const snapX = Math.round(baseX / GRID_SIZE) * GRID_SIZE;
+    const snapY = Math.round(baseY / GRID_SIZE) * GRID_SIZE;
+    setForm((f) => ({ ...f, x: snapX, y: snapY }));
+    setPlacing(false);
+    setAdding(true);
+  };
+  const saveAdd = async () => {
+    const newId = Math.max(...tables.map((t) => t.id), 0) + 1;
+    await setDoc(doc(db, "tables", String(newId)), {
+      id: newId,
+      name: form.name,
+      seats: form.seats,
+      status: "available",
+      typeId: tableTypes[0].id,
+      x: form.x,
+      y: form.y,
+    });
+    setAdding(false);
+  };
+  const cancelAdd = () => {
+    setAdding(false);
+    setPlacing(false);
+  };
 
   return (
     <div className="p-2 flex flex-col items-center justify-center ">
-      <div className="flex w-full items-center justify-between mb-4">
+      <div className="flex w-full justify-between mb-2">
         <h2 className="text-2xl font-bold">Taproom Floorplan</h2>
-        <button
-          onClick={() => setEditMode((v) => !v)}
-          className={`px-3 py-1 rounded ${
-            editMode ? "bg-red-600 text-white" : "bg-blue-600 text-white"
-          }`}
-        >
-          {editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setEditMode(v => !v)}
+            className={`px-3 py-1 rounded ${
+              editMode ? "bg-red-600 text-white" : "bg-blue-600 text-white"
+            }`}
+          >
+            {editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+          </button>
+          {editMode && (
+            <button
+              onClick={openAdd}
+              className="px-3 py-1 rounded bg-green-600 text-white"
+            >
+              + Add Table
+            </button>
+          )}
+        </div>
       </div>
-      <div ref={containerRef} className="relative w-full aspect-[750/400] max-w-[750px] border border-gray-300 rounded overflow-hidden">
+      {editMode && placing && (
+        <p className="text-sm text-gray-500 italic mb-2">
+          Click on the map to place new table
+        </p>
+      )}
+      {editMode && !placing && (
+        <p className="text-sm text-gray-500 italic mb-4">
+          Tip: Double-click a table to rename or adjust seats.
+        </p>
+      )}
+      <div ref={containerRef} onClick={handleMapClick} className="relative w-full aspect-[750/400] max-w-[750px] border border-gray-300 rounded overflow-hidden">
         {/* 1) The SVG with just shapes */}
         <svg
           viewBox={`0 0 ${BASE_WIDTH} ${BASE_HEIGHT}`}
@@ -299,6 +376,8 @@ const Taproom: React.FC = () => {
             <div
               key={t.id}
               // allow pointer events only in edit mode
+              onPointerDown={(e) => handlePointerDown(e, t)}
+              onDoubleClick={() => editMode && openEditor(t)}
               style={{
                 position: "absolute",
                 left: `${leftPct}%`,
@@ -307,16 +386,137 @@ const Taproom: React.FC = () => {
                 cursor: editMode ? "grab" : "default",
                 pointerEvents: editMode ? "auto" : "none",
                 touchAction: "none",
+                userSelect:  "none",
               }}
-              onPointerDown={(e) => handlePointerDown(e, t)}
+              
             >
-              <span className="font-bold text-white text-sm pointer-events-none select-none hidden sm:block">
-                {t.name}
-              </span>
+              <div className="hidden md:flex flex-col items-center pointer-events-none">
+                <span className="font-bold text-white text-[12px] select-none">
+                  {t.name}
+                </span>
+                {t.seats > 1 && (
+                  <span className="text-xs text-gray-200 select-none">
+                    {t.seats ?? 1} 🪑
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
+      {/* Edit Modal */}
+      {editing && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className=" bg-white p-6 rounded-xl shadow-lg w-[200px] text-center">
+            <h3 className="text-lg font-semibold mb-4">Edit Table {editing.name}</h3>
+
+            <label className="block mb-2">
+              <span className="block text-sm">Name</span>
+              <input
+                className="w-[80px] text-center border rounded px-2 py-1"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </label>
+
+            <label className="block mb-4">
+              <span className="block text-sm mb-1">Seats</span>
+              <div className="flex justify-center items-center space-x-2">
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      seats: Math.max(1, f.seats - 1),
+                    }))
+                  }
+                >
+                  −
+                </button>
+                <span>{form.seats}</span>
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded"
+                  onClick={() =>
+                    setForm((f) => ({ ...f, seats: f.seats + 1 }))
+                  }
+                >
+                  +
+                </button>
+              </div>
+            </label>
+
+            <div className="flex justify-center space-x-2">
+              <button
+                className="px-3 py-1 rounded bg-gray-300"
+                onClick={closeEditor}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 py-1 rounded bg-blue-600 text-white"
+                onClick={saveEdit}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+        )}
+        {adding && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className=" bg-white p-6 rounded-xl shadow-lg w-[200px] text-center">
+            <h3 className="text-lg font-semibold mb-4">Add Table</h3>
+
+            <label className="block mb-2">
+              <span className="block text-sm">Name</span>
+              <input
+                className="w-[80px] text-center border rounded px-2 py-1"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </label>
+
+            <label className="block mb-4">
+              <span className="block text-sm mb-1">Seats</span>
+              <div className="flex justify-center items-center space-x-2">
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      seats: Math.max(1, f.seats - 1),
+                    }))
+                  }
+                >
+                  −
+                </button>
+                <span>{form.seats}</span>
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded"
+                  onClick={() => setForm((f) => ({ ...f, seats: f.seats + 1 }))}
+                >
+                  +
+                </button>
+              </div>
+            </label>
+
+            <div className="flex justify-center space-x-2">
+              <button
+                className="px-3 py-1 rounded bg-gray-300"
+                onClick={cancelAdd}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-3 py-1 rounded bg-blue-600 text-white"
+                onClick={saveAdd}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 flex gap-6">
         <span className="flex items-center">
@@ -328,7 +528,7 @@ const Taproom: React.FC = () => {
           Unavailable
         </span>
       </div>
-
+      
       <TableList tables={tables} />
     </div>
   );
