@@ -294,8 +294,8 @@ const openEditor = (t: TableData) => {
   };
 
   return (
-    <div className="p-2 flex flex-col items-center justify-center ">
-      <div className="flex w-full justify-between mb-2">
+    <div className="p-2 w-full lg:w-[1000px] flex flex-col items-center justify-center ">
+      <div className="flex w-full md:min-w-[750px] justify-between mb-2">
         <h2 className="text-2xl font-bold">Taproom Floorplan</h2>
         <div className="flex gap-2">
           <button
@@ -326,7 +326,7 @@ const openEditor = (t: TableData) => {
           Tip: Double-click a table to rename or adjust seats.
         </p>
       )}
-      <div ref={containerRef} onClick={handleMapClick} className="relative w-full aspect-[750/400] max-w-[750px] border border-gray-300 rounded overflow-hidden">
+      <div ref={containerRef} onClick={handleMapClick} className="relative w-full aspect-[750/400] border border-gray-300 rounded overflow-hidden">
         {/* 1) The SVG with just shapes */}
         <svg
           viewBox={`0 0 ${BASE_WIDTH} ${BASE_HEIGHT}`}
@@ -396,7 +396,7 @@ const openEditor = (t: TableData) => {
                 </span>
                 {t.seats > 1 && (
                   <span className="text-xs text-gray-200 select-none">
-                    {t.seats ?? 1} 🪑
+                    {t.seats ?? 1}🪑
                   </span>
                 )}
               </div>

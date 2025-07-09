@@ -4,9 +4,9 @@ import Taproom from './components/Taproom';
 function App() {
   return (
     <>
-      <div className="flex flex-col items-center p-4 gap-4">
-        <DailyInfo />
+      <div className="flex justify-center md:flex-row flex-col items-center flex-wrap p-4 gap-4">
         <Taproom />
+        <DailyInfo />
       </div>
     </>
   );

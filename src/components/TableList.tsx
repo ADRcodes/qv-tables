@@ -15,7 +15,7 @@ const TableList: React.FC<TableListProps> = ({ tables }) => {
   const available = tables.filter((t) => t.status === "available");
 
   return (
-    <div className="mt-4 w-full max-w-[750px]">
+    <div className="mt-4 w-full">
       <h3 className="text-xl font-bold mb-2">Available Tables</h3>
       <div className="flex flex-wrap gap-2 space-y-1">
         {available.length === 0 && (<span>No available tables</span>)}
