@@ -386,7 +386,6 @@ const openEditor = (t: TableData) => {
                 cursor: editMode ? "grab" : "default",
                 pointerEvents: editMode ? "auto" : "none",
                 touchAction: "none",
-                userSelect:  "none",
               }}
               
             >
