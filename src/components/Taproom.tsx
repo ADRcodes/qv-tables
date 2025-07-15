@@ -382,13 +382,13 @@ const Taproom: React.FC = () => {
               key={t.id}
               // allow pointer events only in edit mode
               onPointerDown={(e) => {
-        // double‐tap to open editor
-        if (e.detail === 2 && editMode) {
-          openEditor(t);
-          return;
-        }
-        handlePointerDown(e, t);
-      }}
+                // double‐tap to open editor
+                if (e.detail === 2 && editMode) {
+                  openEditor(t);
+                  return;
+                }
+                handlePointerDown(e, t);
+              }}
               style={{
                 position: "absolute",
                 left:      `${leftPct}%`,
