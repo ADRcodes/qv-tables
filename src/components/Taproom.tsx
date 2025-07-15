@@ -130,6 +130,10 @@ const Taproom: React.FC = () => {
     y: number;
   }>({ name: "New", seats: 4, x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  // track last tap to support double-tap on mobile
+  const lastTapRef = useRef<number>(0);
+  const lastTapIdRef = useRef<number | null>(null);
+  const lastTapPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
 
   // 1️⃣ Subscribe to Firestore “tables” collection
@@ -178,17 +182,36 @@ const Taproom: React.FC = () => {
   };
 
   const handlePointerDown = (
-  e: React.PointerEvent,
-  t: TableData
-): void => {
-  if (!editMode || !containerRef.current) return;
-  e.preventDefault();
+    e: React.PointerEvent,
+    t: TableData
+  ): void => {
+    if (!editMode || !containerRef.current) return;
+    e.preventDefault();
 
-  const rect = containerRef.current.getBoundingClientRect();
-  const startX = t.x;
-  const startY = t.y;
-  const startClientX = e.clientX;
-  const startClientY = e.clientY;
+    const now = Date.now();
+    const isDoubleTap =
+      e.detail === 2 ||
+      (lastTapIdRef.current === t.id &&
+        now - lastTapRef.current < 300 &&
+        Math.abs(e.clientX - lastTapPosRef.current.x) < 5 &&
+        Math.abs(e.clientY - lastTapPosRef.current.y) < 5);
+
+    if (isDoubleTap) {
+      openEditor(t);
+      lastTapRef.current = 0;
+      lastTapIdRef.current = null;
+      return;
+    }
+
+    lastTapRef.current = now;
+    lastTapIdRef.current = t.id;
+    lastTapPosRef.current = { x: e.clientX, y: e.clientY };
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const startX = t.x;
+    const startY = t.y;
+    const startClientX = e.clientX;
+    const startClientY = e.clientY;
 
   // move handler closes over startX/startY/startClientX/startClientY/rect
   const onPointerMove = (ev: PointerEvent) => {
@@ -236,6 +259,7 @@ const Taproom: React.FC = () => {
       x: finalX,
       y: finalY,
     });
+
   };
 
   window.addEventListener("pointermove", onPointerMove, { passive: false });
