@@ -128,7 +128,7 @@ const Taproom: React.FC = () => {
     seats: number;
     x: number;
     y: number;
-  }>({ name: "New", seats: 4, x: 0, y: 0 });
+  }>({ name: "", seats: 4, x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
 
@@ -184,6 +184,13 @@ const Taproom: React.FC = () => {
   if (!editMode || !containerRef.current) return;
   e.preventDefault();
 
+  // ** double-tap detection **
+  if (e.detail === 2) {
+    setForm({ name: t.name, seats: t.seats, x: t.x, y: t.y });
+    setEditing(t);
+    return;
+  }
+
   const rect = containerRef.current.getBoundingClientRect();
   const startX = t.x;
   const startY = t.y;
@@ -196,22 +203,20 @@ const Taproom: React.FC = () => {
     const dyClient = ev.clientY - startClientY;
     const dx = (dxClient / rect.width) * BASE_WIDTH;
     const dy = (dyClient / rect.height) * BASE_HEIGHT;
+    const rawX = startX + dx;
+    const rawY = startY + dy;
+    const snappedX =
+      Math.round(rawX / GRID_SIZE) * GRID_SIZE;
+    const snappedY =
+      Math.round(rawY / GRID_SIZE) * GRID_SIZE;
 
-    // snap while dragging
-      const rawX = startX + dx;
-      const rawY = startY + dy;
-      const snappedX =
-        Math.round(rawX / GRID_SIZE) * GRID_SIZE;
-      const snappedY =
-        Math.round(rawY / GRID_SIZE) * GRID_SIZE;
-
-      setTables((prev) =>
-        prev.map((tbl) =>
-          tbl.id === t.id
-            ? { ...tbl, x: snappedX, y: snappedY }
-            : tbl
-        )
-      );
+    setTables((prev) =>
+      prev.map((tbl) =>
+        tbl.id === t.id
+          ? { ...tbl, x: snappedX, y: snappedY }
+          : tbl
+      )
+    );
   };
 
   // up handler now uses ev to compute final position and _then_ persists
@@ -242,7 +247,7 @@ const Taproom: React.FC = () => {
   window.addEventListener("pointerup",   onPointerUp);
 };
 
-const openEditor = (t: TableData) => {
+  const openEditor = (t: TableData) => {
     setForm({ name: t.name, seats: t.seats ?? 4, x: t.x, y: t.y });
     setEditing(t);
   };
@@ -260,7 +265,7 @@ const openEditor = (t: TableData) => {
   // Begin adding: click map to place
   const openAdd = () => {
     setPlacing(true);
-    setForm({ name: "New", seats: 4, x: 0, y: 0 });
+    setForm({ name: "", seats: 4, x: 0, y: 0 });
   };
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!placing || !containerRef.current) return;
@@ -376,16 +381,28 @@ const openEditor = (t: TableData) => {
             <div
               key={t.id}
               // allow pointer events only in edit mode
-              onPointerDown={(e) => handlePointerDown(e, t)}
-              onDoubleClick={() => editMode && openEditor(t)}
+              onPointerDown={(e) => {
+        // double‐tap to open editor
+        if (e.detail === 2 && editMode) {
+          openEditor(t);
+          return;
+        }
+        handlePointerDown(e, t);
+      }}
               style={{
                 position: "absolute",
-                left: `${leftPct}%`,
-                top: `${topPct}%`,
+                left:      `${leftPct}%`,
+                top:       `${topPct}%`,
+                width:     `${(type.dimensions.width  / BASE_WIDTH)  * 100}%`,
+                height:    `${(type.dimensions.height / BASE_HEIGHT) * 100}%`,
                 transform: "translate(-50%, -50%)",
-                cursor: editMode ? "grab" : "default",
+                cursor:    editMode ? "grab" : "default",
                 pointerEvents: editMode ? "auto" : "none",
-                touchAction: "none",
+                touchAction:   "none",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
               }}
               
             >
@@ -398,6 +415,11 @@ const openEditor = (t: TableData) => {
                     {t.seats ?? 1}🪑
                   </span>
                 )}
+              </div>
+              <div className="flex md:hidden flex-col items-center pointer-events-none">
+                  <span className="text-xs text-gray-200 select-none">
+                    {t.seats}
+                  </span>
               </div>
             </div>
           );
