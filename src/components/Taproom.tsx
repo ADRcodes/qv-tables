@@ -177,19 +177,23 @@ const Taproom: React.FC = () => {
     // UI will auto-update via onSnapshot
   };
 
-  const handlePointerDown = (
-  e: React.PointerEvent,
-  t: TableData
-): void => {
-  if (!editMode || !containerRef.current) return;
-  e.preventDefault();
+  const lastTapRef = useRef<number>(0);
 
-  // ** double-tap detection **
-  if (e.detail === 2) {
-    setForm({ name: t.name, seats: t.seats, x: t.x, y: t.y });
-    setEditing(t);
-    return;
-  }
+  const handlePointerDown = (
+    e: React.PointerEvent,
+    t: TableData
+  ): void => {
+    if (!editMode || !containerRef.current) return;
+    e.preventDefault();
+
+    // ** double-tap detection **
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) {
+      openEditor(t);
+      lastTapRef.current = 0;
+      return;
+    }
+    lastTapRef.current = now;
 
   const rect = containerRef.current.getBoundingClientRect();
   const startX = t.x;
@@ -381,14 +385,7 @@ const Taproom: React.FC = () => {
             <div
               key={t.id}
               // allow pointer events only in edit mode
-              onPointerDown={(e) => {
-                // double‐tap to open editor
-                if (e.detail === 2 && editMode) {
-                  openEditor(t);
-                  return;
-                }
-                handlePointerDown(e, t);
-              }}
+              onPointerDown={(e) => handlePointerDown(e, t)}
               style={{
                 position: "absolute",
                 left:      `${leftPct}%`,
