@@ -10,6 +10,7 @@ import {
   doc,
   updateDoc,
   setDoc,
+  deleteDoc,
   query
 } from "firebase/firestore";
 
@@ -266,6 +267,13 @@ const Taproom: React.FC = () => {
     closeEditor();
   };
 
+  const deleteTable = async () => {
+    if (!editing) return;
+    if (!window.confirm(`Delete table ${editing.name}?`)) return;
+    await deleteDoc(doc(db, "tables", String(editing.id)));
+    closeEditor();
+  };
+
   // Begin adding: click map to place
   const openAdd = () => {
     setPlacing(true);
@@ -475,6 +483,12 @@ const Taproom: React.FC = () => {
                 onClick={saveEdit}
               >
                 Save
+              </button>
+              <button
+                className="px-3 py-1 rounded bg-red-600 text-white"
+                onClick={deleteTable}
+              >
+                Delete
               </button>
             </div>
           </div>
