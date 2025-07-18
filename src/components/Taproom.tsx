@@ -313,20 +313,20 @@ const Taproom: React.FC = () => {
   return (
     <div className="p-2 w-full lg:w-[1000px] flex flex-col items-center justify-center ">
       <div className="flex w-full md:min-w-[750px] justify-between mb-2">
-        <h2 className="text-2xl font-bold">Taproom Floorplan</h2>
+        <h2 className="text-xl sm:text-2xl font-bold w-min sm:w-fit">Taproom Tracker</h2>
         <div className="flex gap-2">
           <button
             onClick={() => setEditMode(v => !v)}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 h-min rounded ${
               editMode ? "bg-red-600 text-white" : "bg-blue-600 text-white"
             }`}
           >
-            {editMode ? "Exit Edit Mode" : "Enter Edit Mode"}
+            {editMode ? "Exit Edit" : "Edit"}
           </button>
           {editMode && (
             <button
               onClick={openAdd}
-              className="px-3 py-1 rounded bg-green-600 text-white"
+              className="px-3 py-1 h-min rounded bg-green-600 text-white"
             >
               + Add Table
             </button>
@@ -433,20 +433,24 @@ const Taproom: React.FC = () => {
       {/* Edit Modal */}
       {editing && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className=" bg-white p-6 rounded-xl shadow-lg w-[200px] text-center">
-            <h3 className="text-lg font-semibold mb-4">Edit Table {editing.name}</h3>
-
-            <label className="block mb-2">
-              <span className="block text-sm">Name</span>
+          <div className="relative bg-white p-6 rounded-xl shadow-lg w-[200px] text-center">
+            <label className="block my-4">
+              <span className="text-lg font-semibold mb-4">Edit Table </span>
               <input
-                className="w-[80px] text-center border rounded px-2 py-1"
+                className="w-[50px] text-center border rounded px-2 py-1"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               />
             </label>
 
             <label className="block mb-4">
-              <span className="block text-sm mb-1">Seats</span>
+              <div className="pl-[5px]">
+                {Array.from({ length: form.seats }, (_, i) => (
+                  <span key={i} className="text-xl ml-[-5px]">
+                    🪑
+                  </span>
+                ))}
+              </div>
               <div className="flex justify-center items-center space-x-2">
                 <button
                   className="px-3 py-1 bg-gray-200 rounded"
@@ -473,22 +477,26 @@ const Taproom: React.FC = () => {
 
             <div className="flex justify-center space-x-2">
               <button
-                className="px-3 py-1 rounded bg-gray-300"
-                onClick={closeEditor}
-              >
-                Cancel
-              </button>
-              <button
                 className="px-3 py-1 rounded bg-blue-600 text-white"
                 onClick={saveEdit}
               >
                 Save
               </button>
+            </div>
+            <div className="absolute top-2 right-2">
               <button
-                className="px-3 py-1 rounded bg-red-600 text-white"
+                className="transition-transform duration-200 hover:rotate-90"
+                onClick={closeEditor}
+              >
+                ✖️
+              </button>
+            </div>
+            <div className="absolute top-2 left-2">
+              <button
+                className="transition-transform duration-200 hover:rotate-90"
                 onClick={deleteTable}
               >
-                Delete
+                🗑️
               </button>
             </div>
           </div>

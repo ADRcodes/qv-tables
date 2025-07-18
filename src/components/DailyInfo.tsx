@@ -110,19 +110,19 @@ const DailyInfo: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          <div className="flex flex-row md:flex-col">
+          <div className="flex flex-col">
             <div className="font-medium text-gray-800">Reservations:</div>
             <div className="ml-2 text-gray-600 whitespace-pre-wrap">
               {info.reservations || "None"}
             </div>
           </div>
-          <div className="flex flex-row md:flex-col">
+          <div className="flex flex-col">
             <div className="font-medium text-gray-800">Out of Stock (86):</div>
             <div className="ml-2 text-gray-600 whitespace-pre-wrap">
               {info.outOfStock || "None"}
             </div>
           </div>
-          <div className="flex flex-row md:flex-col">
+          <div className="flex flex-col">
             <div className="font-medium text-gray-800">Positions:</div>
             <div className="ml-2 text-gray-600 whitespace-pre-wrap">
               {info.positions || "N/A"}
