@@ -1,4 +1,5 @@
 import DailyInfo from './components/DailyInfo';
+import Footer from './components/Footer';
 import Taproom from './components/Taproom';
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
         <Taproom />
         <DailyInfo />
       </div>
+      <Footer />
     </>
   );
 }

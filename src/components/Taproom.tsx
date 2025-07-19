@@ -312,12 +312,12 @@ const Taproom: React.FC = () => {
 
   return (
     <div className="p-2 w-full lg:w-[1000px] flex flex-col items-center justify-center ">
-      <div className="flex w-full md:min-w-[750px] justify-between mb-2">
-        <h2 className="text-xl sm:text-2xl font-bold w-min sm:w-fit">Taproom Tracker</h2>
-        <div className="flex gap-2">
+      <div className="flex w-full md:min-w-[750px] gap-1 justify-between mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold">QV Taproom Tracker</h2>
+        <div className="flex sm:flex-col gap-2">
           <button
             onClick={() => setEditMode(v => !v)}
-            className={`px-3 py-1 h-min rounded ${
+            className={`px-3 py-1 h-min rounded whitespace-nowrap ${
               editMode ? "bg-red-600 text-white" : "bg-blue-600 text-white"
             }`}
           >
@@ -326,7 +326,7 @@ const Taproom: React.FC = () => {
           {editMode && (
             <button
               onClick={openAdd}
-              className="px-3 py-1 h-min rounded bg-green-600 text-white"
+              className="px-3 py-1 h-min rounded whitespace-nowrap bg-green-600 text-white"
             >
               + Add Table
             </button>
