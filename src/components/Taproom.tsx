@@ -131,6 +131,7 @@ const Taproom: React.FC = () => {
     y: number;
   }>({ name: "", seats: 4, x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [dbAvailable, setDbAvailable] = useState(true);
 
 
   // 1️⃣ Subscribe to Firestore “tables” collection
@@ -139,6 +140,7 @@ const Taproom: React.FC = () => {
     const unsubscribe = onSnapshot(
       q,
       (snap) => {
+        setDbAvailable(true);
         const docs = snap.docs.map((d) => {
           const data = d.data() as TableData;
           return {
@@ -168,6 +170,7 @@ const Taproom: React.FC = () => {
       (error) => {
         // If fetching from Firestore fails, fall back to default tables
         console.error("Error fetching tables", error);
+        setDbAvailable(false);
         setTables(
           initialTables.map((t) => ({ ...t, status: t.status || "available" }))
         );
@@ -177,15 +180,30 @@ const Taproom: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  // 3️⃣ Toggle status in Firestore
+  // 3️⃣ Toggle status with Firestore fallback
   const handleTableClick = async (id: number) => {
     if (editMode) return;
     const table = tables.find((t) => t.id === id);
     if (!table) return;
     const current = table.status || "available";
-    const next: TableStatus = current === "available" ? "unavailable" : "available";
-    await updateDoc(doc(db, "tables", String(id)), { status: next });
-    // UI will auto-update via onSnapshot
+    const next: TableStatus =
+      current === "available" ? "unavailable" : "available";
+
+    if (dbAvailable) {
+      try {
+        await updateDoc(doc(db, "tables", String(id)), { status: next });
+      } catch (err) {
+        console.error("Failed to update table status", err);
+        setTables((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, status: next } : t))
+        );
+      }
+    } else {
+      setTables((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status: next } : t))
+      );
+    }
+    // UI will auto-update via onSnapshot when DB is available
   };
 
   const lastTapRef = useRef<number>(0);
