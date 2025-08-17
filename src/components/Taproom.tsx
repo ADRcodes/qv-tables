@@ -136,33 +136,43 @@ const Taproom: React.FC = () => {
   // 1️⃣ Subscribe to Firestore “tables” collection
   useEffect(() => {
     const q = query(collection(db, "tables"));
-    const unsubscribe = onSnapshot(q, (snap) => {
-      const docs = snap.docs.map((d) => {
-        const data = d.data() as TableData;
-        return {
-          ...data,
-          id: Number(d.id), // doc.id is string
-          status: data.status || "available",
-          seats:
-            data.seats ?? initialTables.find((t) => t.id === Number(d.id))?.seats ?? 4,
-          isOutside:
-            data.isOutside ??
-            initialTables.find((t) => t.id === Number(d.id))?.isOutside ??
-            false,
-        };
-      });
-      if (docs.length === 0) {
-        // 2️⃣ Seed initial data on first run
-        initialTables.forEach((t) =>
-          setDoc(doc(db, "tables", String(t.id)), {
-            ...t,
-            status: t.status || "available",
-          })
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
+        const docs = snap.docs.map((d) => {
+          const data = d.data() as TableData;
+          return {
+            ...data,
+            id: Number(d.id), // doc.id is string
+            status: data.status || "available",
+            seats:
+              data.seats ?? initialTables.find((t) => t.id === Number(d.id))?.seats ?? 4,
+            isOutside:
+              data.isOutside ??
+              initialTables.find((t) => t.id === Number(d.id))?.isOutside ??
+              false,
+          };
+        });
+        if (docs.length === 0) {
+          // 2️⃣ Seed initial data on first run
+          initialTables.forEach((t) =>
+            setDoc(doc(db, "tables", String(t.id)), {
+              ...t,
+              status: t.status || "available",
+            })
+          );
+        } else {
+          setTables(docs);
+        }
+      },
+      (error) => {
+        // If fetching from Firestore fails, fall back to default tables
+        console.error("Error fetching tables", error);
+        setTables(
+          initialTables.map((t) => ({ ...t, status: t.status || "available" }))
         );
-      } else {
-        setTables(docs);
       }
-    });
+    );
 
     return unsubscribe;
   }, []);
